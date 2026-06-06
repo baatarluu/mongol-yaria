@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Монгол яриа таниулагч — Дуу хоолойг текст болгох</title>
+  <meta name="description" content="Монгол хэлээр ярьсан яриаг шууд текст болгон хөрвүүлэх үнэгүй веб апп. AI туслахаар засварлах, хураангуйлах, орчуулах." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ===================== НЭВТРЭХ ДЭЛГЭЦ ===================== -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-mark">🎙️</span>
+        <span class="logo-text">Монгол<span class="logo-accent">.яриа</span></span>
+      </div>
+      <h1 class="auth-title" id="auth-title">Тавтай морил</h1>
+      <p class="auth-subtitle" id="auth-subtitle">Үргэлжлүүлэхийн тулд бүртгэлээрээ нэвтэрнэ үү</p>
+
+      <form id="auth-form" class="auth-form" autocomplete="off">
+        <label class="field">
+          <span class="field-label">И-мэйл хаяг</span>
+          <input type="email" id="email" placeholder="tanii@email.com" required />
+        </label>
+        <label class="field">
+          <span class="field-label">Нууц үг</span>
+          <input type="password" id="password" placeholder="••••••••" minlength="4" required />
+        </label>
+        <p id="auth-error" class="auth-error" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block" id="auth-submit">Нэвтрэх</button>
+      </form>
+
+      <p class="auth-toggle">
+        <span id="auth-toggle-text">Бүртгэл байхгүй юу?</span>
+        <button type="button" id="auth-toggle-btn" class="link-btn">Бүртгүүлэх</button>
+      </p>
+
+      <div class="auth-divider"><span>эсвэл</span></div>
+      <button type="button" id="guest-btn" class="btn btn-ghost btn-block">Зочин болж үргэлжлүүлэх</button>
+
+      <p class="auth-note">🔒 Google бүртгэл шаардахгүй. Таны мэдээлэл зөвхөн энэ төхөөрөмжид хадгалагдана.</p>
+    </div>
+  </div>
+
+  <!-- ===================== ҮНДСЭН АПП ===================== -->
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <span class="logo-mark">🎙️</span>
+          <span class="logo-text">Монгол<span class="logo-accent">.яриа</span></span>
+        </div>
+        <div class="topbar-right">
+          <span class="user-chip" id="user-chip">зочин</span>
+          <button id="logout-btn" class="btn btn-ghost btn-sm">Гарах</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <h1>Монгол яриаг текст болгон хөрвүүлнэ</h1>
+        <p>Микрофоноо асааж ярихад л болоо. Бичсэн текстээ AI туслахаар засварлаж, хураангуйлж, орчуулаарай.</p>
+      </section>
+
+      <!-- 3 алхам -->
+      <section class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <h3>Эхлүүлэх</h3>
+            <p>"Эхлүүлэх" товчийг дарж яриагаа эхлүүлнэ.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <h3>Хадгалах</h3>
+            <p>Зогсоож, текстээ хадгалах эсвэл хуулна.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <h3>AI боловсруулалт</h3>
+            <p>Засварлах, хураангуйлах, орчуулах боломжтой.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Браузер сэрэмжлүүлэг -->
+      <div id="browser-warning" class="warning" hidden>
+        ⚠️ Таны браузер яриа таних боломжийг дэмжихгүй байна. Google Chrome ашиглана уу.
+      </div>
+
+      <!-- Хөрвүүлэгч -->
+      <section class="panel">
+        <div class="panel-head">
+          <div class="status">
+            <span id="status-dot" class="status-dot"></span>
+            <span id="status-text">Бэлэн</span>
+          </div>
+          <div class="controls">
+            <button id="start-btn" class="btn btn-primary">
+              <span class="dot-rec"></span> Эхлүүлэх
+            </button>
+            <button id="stop-btn" class="btn btn-secondary" disabled>Зогсоох</button>
+          </div>
+        </div>
+
+        <textarea id="transcript" class="transcript" placeholder="Энд таны ярьсан текст гарч ирнэ…"></textarea>
+        <div id="interim" class="interim"></div>
+
+        <div class="panel-foot">
+          <div class="counters">
+            <span class="counter"><b id="word-count">0</b> үг</span>
+            <span class="counter"><b id="char-count">0</b> тэмдэгт</span>
+            <span class="counter"><b id="token-count">0</b> токен</span>
+          </div>
+          <div class="actions">
+            <button id="copy-btn" class="btn btn-ghost btn-sm">📋 Хуулах</button>
+            <button id="save-btn" class="btn btn-ghost btn-sm">💾 Хадгалах</button>
+            <button id="clear-btn" class="btn btn-ghost btn-sm danger">🗑️ Устгах</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Өдрийн хязгаар -->
+      <section class="quota">
+        <div class="quota-head">
+          <span>Өдрийн ашиглалт</span>
+          <span><b id="quota-used">0</b> / 1,000,000 тэмдэгт</span>
+        </div>
+        <div class="quota-bar"><div id="quota-fill" class="quota-fill"></div></div>
+      </section>
+
+      <!-- AI туслах -->
+      <section class="panel ai-panel">
+        <div class="ai-head">
+          <h2>🤖 AI туслах</h2>
+          <p>Доорх товчуудаар текстээ боловсруулна.</p>
+        </div>
+        <div class="ai-buttons">
+          <button class="btn btn-ai" data-action="correct">✍️ Алдаа засах</button>
+          <button class="btn btn-ai" data-action="summarize">📝 Хураангуйлах</button>
+          <button class="btn btn-ai" data-action="translate-en">🇬🇧 Англи орчуулга</button>
+          <button class="btn btn-ai" data-action="translate-ja">🇯🇵 Япон орчуулга</button>
+          <button class="btn btn-ai" data-action="translate-zh">🇨🇳 Хятад орчуулга</button>
+        </div>
+        <div id="ai-result-wrap" class="ai-result-wrap" hidden>
+          <div class="ai-result-head">
+            <span id="ai-result-title">Үр дүн</span>
+            <button id="ai-copy-btn" class="link-btn">📋 Хуулах</button>
+          </div>
+          <div id="ai-result" class="ai-result"></div>
+        </div>
+      </section>
+
+      <!-- Хадгалсан тэмдэглэлүүд -->
+      <section class="panel" id="saved-panel" hidden>
+        <h2 class="saved-title">💾 Хадгалсан тэмдэглэлүүд</h2>
+        <div id="saved-list" class="saved-list"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© 2026 Монгол.яриа · Браузер дээр ажилладаг үнэгүй яриа таниулагч</p>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

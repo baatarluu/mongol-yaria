@@ -1,0 +1,12 @@
+{
+  "name": "mongol-yaria",
+  "version": "1.0.0",
+  "description": "Монгол хэлээр ярьсан яриаг текст болгон хөрвүүлэх веб апп (Web Speech API + AI туслах)",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "keywords": ["speech-to-text", "mongolian", "web-speech-api", "vercel"],
+  "license": "MIT"
+}
