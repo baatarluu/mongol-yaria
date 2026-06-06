@@ -3,7 +3,7 @@
 Монгол хэлээр ярьсан яриаг **браузер дээр шууд** текст болгон хөрвүүлдэг үнэгүй веб апп.
 Дээр нь AI туслахаар текстээ **засварлах, хураангуйлах, орчуулах** (Англи / Япон / Хятад) боломжтой.
 
-> [mongol.guru](https://www.mongol.guru/) сайтаас санаа авч хийсэн, дизайн болон үндсэн боломжуудыг дуурайлган бүтээв.
+> [mongol.guru](https://www.mongol.guru/) сайтаас санаа авч хийсэн, дизайн болон үндсэн боломжуудыг нь дуурайлган бүтээв.
 
 ## ✨ Боломжууд
 
@@ -11,53 +11,55 @@
 - 🔐 **Нэвтрэлт (Google ШААРДАХГҮЙ)** — и-мэйл/нууц үг эсвэл зочин горим, бүх дата зөвхөн таны төхөөрөмжид
 - 📊 Үг / тэмдэгт / токен тоолуур ба өдрийн ашиглалтын хязгаар
 - 💾 Тэмдэглэл хадгалах, хуулах, устгах
-- 🤖 AI туслах — Claude API-аар засвар, хураангуй, олон хэлний орчуулга
+- 🤖 AI туслах — **Google Gemini API**-аар засвар, хураангуй, олон хэлний орчуулга
 
 ## 🚀 Орон нутагт ажиллуулах
 
 ```bash
 npx serve .
-# эсвэл
-python -m http.server 3000
 ```
 
 Браузераар нээж, микрофоны зөвшөөрөл өгнө үү. **Google Chrome ашиглахыг зөвлөнө** (Web Speech API-г хамгийн сайн дэмждэг).
 
-## ☁️ Vercel дээр deploy хийх
+## 🔑 GEMINI_API_KEY (AI туслахад)
 
-### A хувилбар — GitHub-аар (хамгийн хялбар)
+AI туслах ажиллахын тулд [aistudio.google.com/apikey](https://aistudio.google.com/apikey) дээрээс
+**үнэгүй** Gemini API key авна. Үүнийг deploy хийсэн платформынхаа Environment Variables дээр
+`GEMINI_API_KEY` нэрээр нэмнэ. (Түлхүүргүй үед яриа таних боломж хэвийн ажиллах ба зөвхөн
+AI товчнууд анхааруулга өгнө.)
 
-1. Энэ кодыг GitHub repo-д push хийнэ (доорх "GitHub" хэсгийг үз).
-2. [vercel.com](https://vercel.com) → **Add New → Project** → GitHub repo-гоо сонгоно.
-3. Framework: **Other** (тохиргоо хэрэггүй), **Deploy** дарна.
-4. AI боломжийг идэвхжүүлэхийн тулд: **Settings → Environment Variables** дээр
-   `ANTHROPIC_API_KEY` = таны Anthropic API түлхүүр нэмж, дахин deploy хийнэ.
+## ☁️ Deploy — Vercel эсвэл Netlify
 
-### B хувилбар — Vercel CLI-аар
+Аппыг **аль алинд нь** ижил кодоор байршуулж болно. AI функц нь хоёр платформ дээр аль алинд нь
+`/api/ai` замаар ажиллахаар тохируулагдсан.
 
-```bash
-npm i -g vercel
-vercel login
-vercel            # урьдчилсан deploy
-vercel --prod     # production deploy
-vercel env add ANTHROPIC_API_KEY   # AI түлхүүр нэмэх
-```
+### Netlify дээр
 
-## 🔑 ANTHROPIC_API_KEY
+1. [netlify.com](https://netlify.com) → GitHub-аар нэвтэрнэ.
+2. **Add new site → Import an existing project** → GitHub repo сонгоно.
+3. Тохиргоо: `netlify.toml` файл бүгдийг автоматаар тохируулна — шууд **Deploy**.
+4. AI идэвхжүүлэх: **Site settings → Environment variables** дээр `GEMINI_API_KEY` нэмж дахин deploy.
 
-AI туслах ажиллахын тулд [console.anthropic.com](https://console.anthropic.com/) дээрээс API key авч,
-Vercel-ийн Environment Variables дээр `ANTHROPIC_API_KEY` нэрээр нэмнэ. (Түлхүүргүй үед яриа таних
-боломж хэвийн ажиллах ба зөвхөн AI товчнууд анхааруулга өгнө.)
+> Эсвэл [Netlify Drop](https://app.netlify.com/drop)-д хавтсыг чирж шууд байршуулж болно
+> (гэхдээ AI функц ажиллахын тулд GitHub-аар импорт хийх нь дээр).
+
+### Vercel дээр
+
+1. [vercel.com](https://vercel.com) → GitHub-аар нэвтэрнэ.
+2. **Add New → Project** → GitHub repo сонгоно → Framework: **Other** → **Deploy**.
+3. AI идэвхжүүлэх: **Settings → Environment Variables** дээр `GEMINI_API_KEY` нэмж дахин deploy.
 
 ## 📁 Бүтэц
 
 ```
 mongol-stt/
-├── index.html        # UI
-├── styles.css        # Дизайн
-├── app.js            # Яриа таних + нэвтрэлт + логик
-├── api/ai.js         # Vercel serverless функц (Claude API)
-├── vercel.json       # Микрофон зөвшөөрлийн header
+├── index.html               # UI
+├── styles.css               # Дизайн
+├── app.js                   # Яриа таних + нэвтрэлт + логик
+├── api/ai.js                # Vercel serverless функц (Gemini)
+├── netlify/functions/ai.js  # Netlify serverless функц (Gemini)
+├── netlify.toml             # Netlify тохиргоо + /api/ai redirect
+├── vercel.json              # Vercel header тохиргоо
 └── package.json
 ```
 
@@ -65,6 +67,7 @@ mongol-stt/
 
 - Яриа таних чанар браузер болон микрофоноос хамаарна. Chrome дээр хамгийн сайн.
 - Нэвтрэлт нь **демо зориулалттай** (localStorage). Production-д жинхэнэ backend auth хэрэглэнэ үү.
+- Gemini загварыг (`gemini-2.0-flash`) функцийн файлуудаас өөрчилж болно.
 
 ## 📄 Лиценз
 

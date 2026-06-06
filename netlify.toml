@@ -1,0 +1,19 @@
+# Netlify тохиргоо
+# Статик сайт (root) + serverless функц (netlify/functions)
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Frontend нь /api/ai руу хүсэлт явуулдаг тул түүнийг функц рүү чиглүүлнэ.
+# Ингэснээр Vercel болон Netlify хоёулаа ижил кодоор ажиллана.
+[[redirects]]
+  from = "/api/ai"
+  to = "/.netlify/functions/ai"
+  status = 200
+
+# Микрофон ашиглах зөвшөөрөл
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Permissions-Policy = "microphone=(self)"
