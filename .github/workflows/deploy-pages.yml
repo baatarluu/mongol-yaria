@@ -24,6 +24,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # classroom (React + Vite) аппыг дэд зам дээр build хийнэ.
+      # GitHub Pages нь /<repo>/ дор тавьдаг тул base = /<repo>/classroom/.
+      # Pages дээр backend (serverless) байхгүй тул demo горим + HashRouter.
+      - name: Build classroom app
+        working-directory: classroom
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/classroom/
+          VITE_USE_API: "false"
+          VITE_ROUTER: hash
+        run: |
+          npm ci
+          npm run build
+
+      # Нэгдсэн сайт угсрах: үндсэн Монгол.яриа апп root-д, classroom нь /classroom/-д.
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          tar --exclude=./.git --exclude=./.github --exclude=./classroom \
+              --exclude=./node_modules --exclude=./_site \
+              -cf - . | tar -xf - -C _site
+          mkdir -p _site/classroom
+          cp -r classroom/dist/* _site/classroom/
+
       - name: Configure Pages (auto-enable)
         uses: actions/configure-pages@v5
         with:
@@ -32,7 +60,7 @@ jobs:
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "."
+          path: "_site"
 
       - name: Deploy to GitHub Pages
         id: deployment
