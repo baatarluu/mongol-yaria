@@ -91,6 +91,13 @@ mongol-yaria/
 - Нэвтрэлт нь **демо зориулалттай** (localStorage). Production-д жинхэнэ backend auth хэрэглэнэ үү.
 - Gemini загварыг (`gemini-2.0-flash`) функцийн файлуудаас өөрчилж болно.
 
+## 🎓 Нэмэлт апп — Багшийн самбар (анги удирдлага)
+
+Энэ репозиторид [ZipGrade Classes](https://www.zipgrade.com/classes/)-тэй ижил
+**анги болон сурагчдын бүртгэл удирдах** тусдаа веб апп `classroom/` хавтаст байна
+(React + Vite + Tailwind, Google Sheets backend, JWT нэвтрэлт). Дэлгэрэнгүйг
+[`classroom/README.md`](classroom/README.md)-ээс үзнэ үү.
+
 ## 📄 Лиценз
 
 MIT

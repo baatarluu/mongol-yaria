@@ -1,0 +1,20 @@
+# classroom апп-ыг Netlify дээр deploy хийх тохиргоо.
+# Энэ хавтсыг (classroom/) Netlify дээр base directory болгож сонгоно.
+
+[build]
+  base = "classroom/"
+  command = "npm install && npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+# /api/* → serverless функц
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# SPA fallback — клиент талын router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
