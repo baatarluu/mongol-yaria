@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { IS_DEMO } from '../api/client.js';
+import InstallButton from './InstallButton.jsx';
 
 function NavItem({ to, children }) {
   return (
@@ -37,6 +38,7 @@ export default function Layout() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <InstallButton className="btn-outline hidden px-3 py-1.5 text-xs sm:inline-flex" />
             <div className="hidden text-right sm:block">
               <div className="text-sm font-semibold text-slate-700">{teacher?.name}</div>
               <div className="text-xs text-slate-400">{teacher?.email}</div>

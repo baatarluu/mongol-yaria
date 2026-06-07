@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { Alert, Spinner } from '../components/ui.jsx';
+import InstallButton from '../components/InstallButton.jsx';
 
 export default function Login() {
   const { login } = useAuth();
@@ -59,6 +60,9 @@ export function AuthShell({ title, subtitle, children }) {
           <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
         </div>
         <div className="card p-6">{children}</div>
+        <div className="mt-4 flex justify-center">
+          <InstallButton className="btn-ghost text-xs text-slate-500" />
+        </div>
       </div>
     </div>
   );
