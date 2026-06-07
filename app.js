@@ -297,7 +297,7 @@
       if (!res.ok) {
         result.textContent =
           (data && data.error) ||
-          "AI үйлчилгээ тохируулагдаагүй байна. Vercel дээр ANTHROPIC_API_KEY орчны хувьсагч нэмнэ үү.";
+          "AI үйлчилгээ тохируулагдаагүй байна. Deploy хийсэн платформ дээрээ GEMINI_API_KEY орчны хувьсагч нэмнэ үү.";
         return;
       }
       result.textContent = data.text || "(хоосон хариу)";
@@ -362,4 +362,11 @@
     // Auto-login if session exists
     if (currentUser()) showApp();
   });
+
+  /* ---------------- PWA: Service worker бүртгэх (офлайн дэмжлэг) ---------------- */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => { /* офлайн дэмжлэггүй — алгасна */ });
+    });
+  }
 })();
