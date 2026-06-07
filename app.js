@@ -173,13 +173,35 @@
   }
 
   /* ---------------- Counters & quota ---------------- */
+  // Токен тооцоолол: autoresearch давталтаар сайжруулсан estimator
+  // (.claude/skills/autoresearch-loop/examples/token-estimator). Энгийн
+  // chars/4-аас илүү нарийвчлалтай: үг тус бүр, цэг таслал тусдаа, кирилл/латин
+  // өөр харьцаа, жигд бус нэгдлийн дундаж засвар. (baseline MAE 7.93 → 0.87)
+  const TOKEN_PUNCT = /[.,!?;:()«»""''\-—/]/g;
+  function estimateTokens(text) {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    let t = 0;
+    for (const w of words) {
+      const puncts = (w.match(TOKEN_PUNCT) || []).length;
+      const core = w.replace(TOKEN_PUNCT, "");
+      t += puncts;
+      if (core.length > 0) {
+        const cyr = (core.match(/[Ѐ-ӿ]/g) || []).length; // кирилл ~3 тэмдэгт/токен
+        const other = core.length - cyr;                 // латин/тоо ~4 тэмдэгт/токен
+        t += Math.ceil(cyr / 3) + Math.ceil(other / 4);
+      }
+    }
+    t += Math.round(words.length / 3); // жигд бус нэгдлийн дундаж засвар
+    return t;
+  }
+
   function updateCounters() {
     const text = $("transcript").value.trim();
     const words = text ? text.split(/\s+/).length : 0;
     const chars = $("transcript").value.length;
     $("word-count").textContent = words.toLocaleString();
     $("char-count").textContent = chars.toLocaleString();
-    $("token-count").textContent = Math.ceil(chars / 4).toLocaleString();
+    $("token-count").textContent = estimateTokens($("transcript").value).toLocaleString();
   }
 
   function todayKey() {
