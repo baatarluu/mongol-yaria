@@ -44,10 +44,11 @@ export default function Dashboard() {
         <p className="text-sm text-slate-500">Таны ангиудын ерөнхий тойм</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Анги" value={stats.classes} icon="🏫" accent="bg-brand-50 text-brand-600" />
         <StatCard label="Сурагч" value={stats.students} icon="👨‍🎓" accent="bg-emerald-50 text-emerald-600" />
         <StatCard label="Шалгалт" value={stats.exams} icon="📝" accent="bg-amber-50 text-amber-600" />
+        <StatCard label="Уншсан дүн" value={stats.results ?? 0} icon="✅" accent="bg-violet-50 text-violet-600" />
       </div>
 
       <div>

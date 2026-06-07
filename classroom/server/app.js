@@ -494,15 +494,17 @@ async function deleteResult(auth, id) {
 // ─────────────── Dashboard ───────────────
 
 async function dashboard(auth) {
-  const [classes, students, exams] = await Promise.all([
+  const [classes, students, exams, results] = await Promise.all([
     readTable('Classes'),
     readTable('Students'),
     readTable('Exams'),
+    readTable('Results'),
   ]);
   const myClasses = classes.filter((c) => c.teacherId === auth.id && c.archived !== 'true');
   const myClassIds = new Set(myClasses.map((c) => c.id));
   const myStudents = students.filter((s) => myClassIds.has(s.classId));
   const myExams = exams.filter((e) => myClassIds.has(e.classId));
+  const myResults = results.filter((r) => r.teacherId === auth.id);
 
   const perClass = myClasses.map((c) => ({
     id: c.id,
@@ -518,6 +520,7 @@ async function dashboard(auth) {
       classes: myClasses.length,
       students: myStudents.length,
       exams: myExams.length,
+      results: myResults.length,
     },
     perClass,
   });

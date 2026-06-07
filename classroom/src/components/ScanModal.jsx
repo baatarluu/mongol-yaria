@@ -3,7 +3,7 @@ import { Modal, Alert, Spinner } from './ui.jsx';
 import { buildLayout } from '../omr/layout.js';
 import { readSheet, imageToGray } from '../omr/scanner.js';
 import { gradeAnswers, idxToLetter } from '../omr/grade.js';
-import { api } from '../api/client.js';
+import { submitResult } from '../sync/sync.js';
 
 // Хариултын хуудсыг утасны камер эсвэл зургаар уншиж дүгнэнэ.
 export default function ScanModal({ open, exam, students, onClose, onSaved }) {
@@ -112,7 +112,7 @@ export default function ScanModal({ open, exam, students, onClose, onSaved }) {
     setBusy(true);
     setError('');
     try {
-      await api.addResult(exam.id, {
+      const res = await submitResult(exam.id, {
         studentId: matched?.id || '',
         studentNumber: idEdit.trim(),
         studentName: matched ? [matched.lastName, matched.firstName].filter(Boolean).join(' ') : '',
@@ -120,7 +120,7 @@ export default function ScanModal({ open, exam, students, onClose, onSaved }) {
         total: review.grade.total,
         answers: review.answers,
       });
-      onSaved();
+      onSaved(res); // { synced } — офлайн бол дараалалд орсон
     } catch (e) {
       setError(e.message);
     } finally {

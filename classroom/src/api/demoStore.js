@@ -100,8 +100,9 @@ export const demoApi = {
     const ids = new Set(myClasses.map((c) => c.id));
     const myStudents = db.students.filter((s) => ids.has(s.classId));
     const myExams = db.exams.filter((e) => ids.has(e.classId));
+    const myResults = db.results.filter((r) => r.teacherId === t.id);
     return delay({
-      stats: { classes: myClasses.length, students: myStudents.length, exams: myExams.length },
+      stats: { classes: myClasses.length, students: myStudents.length, exams: myExams.length, results: myResults.length },
       perClass: myClasses.map((c) => ({
         id: c.id,
         name: c.name,

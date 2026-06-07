@@ -5,12 +5,14 @@ import { FullLoader, Alert, Modal, Spinner, EmptyState } from '../components/ui.
 import AnswerSheet, { printAnswerSheet } from '../components/AnswerSheet.jsx';
 import ScanModal from '../components/ScanModal.jsx';
 import { LETTERS } from '../omr/layout.js';
+import * as outbox from '../sync/outbox.js';
 
 export default function ExamDetail() {
   const { id: classId, examId } = useParams();
   const [exam, setExam] = useState(null);
   const [students, setStudents] = useState([]);
   const [results, setResults] = useState([]);
+  const [pending, setPending] = useState([]);
   const [error, setError] = useState('');
   const [editingKey, setEditingKey] = useState(false);
   const [editingCfg, setEditingCfg] = useState(false);
@@ -20,6 +22,15 @@ export default function ExamDetail() {
     const { results } = await api.listResults(examId);
     setResults(results);
   }, [examId]);
+
+  // Офлайн дараалал дахь (хараахан синк хийгдээгүй) дүнгүүдийг дагана.
+  useEffect(() => {
+    return outbox.subscribe(() => {
+      setPending(outbox.forExam(examId));
+      // Синк хийгдсэн байж болзошгүй тул серверийн дүнг чимээгүй шинэчилнэ.
+      loadResults().catch(() => {});
+    });
+  }, [examId, loadResults]);
 
   const loadAll = useCallback(async () => {
     try {
@@ -43,8 +54,19 @@ export default function ExamDetail() {
   if (!exam) return <FullLoader />;
 
   const keySet = (exam.answerKey || []).filter((k) => k != null).length;
-  const avg = results.length
-    ? Math.round(results.reduce((s, r) => s + (r.total ? (r.score / r.total) * 100 : 0), 0) / results.length)
+  // Серверийн дүн + хүлээгдэж буй (офлайн) дүнг нэгтгэнэ.
+  const pendingRows = pending.map((p) => ({
+    id: p.id,
+    _pending: true,
+    studentName: p.payload.studentName,
+    studentNumber: p.payload.studentNumber,
+    score: p.payload.score,
+    total: p.payload.total,
+  }));
+  const rows = [...pendingRows, ...results];
+  const scanned = rows.length;
+  const avg = scanned
+    ? Math.round(rows.reduce((s, r) => s + (r.total ? (r.score / r.total) * 100 : 0), 0) / scanned)
     : 0;
 
   return (
@@ -82,14 +104,14 @@ export default function ExamDetail() {
       {/* Тойм */}
       <div className="grid grid-cols-3 gap-3">
         <Stat label="Түлхүүр" value={`${keySet}/${exam.totalQuestions}`} />
-        <Stat label="Уншсан" value={results.length} />
+        <Stat label="Уншсан" value={scanned} />
         <Stat label="Дундаж" value={`${avg}%`} />
       </div>
 
       {/* Дүнгийн жагсаалт */}
       <div>
         <h2 className="mb-2 text-lg font-semibold text-slate-800">Дүнгүүд</h2>
-        {results.length === 0 ? (
+        {rows.length === 0 ? (
           <EmptyState
             icon="📄"
             title="Дүн алга"
@@ -112,10 +134,17 @@ export default function ExamDetail() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {results.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50">
+                {rows.map((r) => (
+                  <tr key={r.id} className={`hover:bg-slate-50 ${r._pending ? 'bg-amber-50/40' : ''}`}>
                     <td className="px-4 py-2">
-                      <div className="font-medium text-slate-800">{r.studentName || '(нэр тодорхойгүй)'}</div>
+                      <div className="flex items-center gap-2 font-medium text-slate-800">
+                        {r.studentName || '(нэр тодорхойгүй)'}
+                        {r._pending && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                            ⏳ синк хүлээж буй
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-slate-400">ID: {r.studentNumber || '—'}</div>
                     </td>
                     <td className="px-4 py-2 text-center font-semibold">{r.score}/{r.total}</td>
@@ -128,8 +157,12 @@ export default function ExamDetail() {
                       <button
                         className="btn-ghost px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
                         onClick={async () => {
-                          await api.deleteResult(r.id);
-                          loadResults();
+                          if (r._pending) {
+                            outbox.remove(r.id);
+                          } else {
+                            await api.deleteResult(r.id);
+                            loadResults();
+                          }
                         }}
                       >
                         🗑️

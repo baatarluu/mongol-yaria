@@ -25,11 +25,19 @@ async function request(method, path, body) {
   const headers = { 'Content-Type': 'application/json' };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${BASE}/api${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(`${BASE}/api${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    // fetch амжаагүй = сүлжээ алга (офлайн). Дараа дахин оролдоно.
+    const err = new Error('Сүлжээ алга байна (офлайн).');
+    err.offline = true;
+    throw err;
+  }
   let data = {};
   try {
     data = await res.json();
@@ -44,33 +52,64 @@ async function request(method, path, body) {
   return data;
 }
 
-// Бодит API руу холбогдох хувилбар.
+// ── GET хүсэлтийн read-through кэш ──
+// Амжилттай хариуг localStorage-д хадгалж, офлайн үед сүүлийн утгыг буцаана.
+const cacheKey = (path) => 'classroom.cache.' + path;
+function writeCache(path, data) {
+  try {
+    localStorage.setItem(cacheKey(path), JSON.stringify(data));
+  } catch {
+    /* квот дүүрсэн ч алдаа шиддэггүй */
+  }
+}
+function readCache(path) {
+  try {
+    return JSON.parse(localStorage.getItem(cacheKey(path)));
+  } catch {
+    return null;
+  }
+}
+async function cachedGet(path) {
+  try {
+    const data = await request('GET', path);
+    writeCache(path, data);
+    return data;
+  } catch (e) {
+    if (e.offline) {
+      const cached = readCache(path);
+      if (cached) return { ...cached, _cached: true };
+    }
+    throw e;
+  }
+}
+
+// Бодит API руу холбогдох хувилбар (GET-үүд офлайнд кэшнээс уншина).
 const realApi = {
   register: (b) => request('POST', '/auth/register', b),
   login: (b) => request('POST', '/auth/login', b),
-  me: () => request('GET', '/me'),
-  dashboard: () => request('GET', '/dashboard'),
+  me: () => cachedGet('/me'),
+  dashboard: () => cachedGet('/dashboard'),
 
-  listClasses: () => request('GET', '/classes'),
+  listClasses: () => cachedGet('/classes'),
   createClass: (b) => request('POST', '/classes', b),
   updateClass: (id, b) => request('PATCH', `/classes/${id}`, b),
   deleteClass: (id) => request('DELETE', `/classes/${id}`),
-  getClass: (id) => request('GET', `/classes/${id}`),
+  getClass: (id) => cachedGet(`/classes/${id}`),
 
   listStudents: (classId, q) =>
-    request('GET', `/classes/${classId}/students${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+    cachedGet(`/classes/${classId}/students${q ? `?q=${encodeURIComponent(q)}` : ''}`),
   addStudent: (classId, b) => request('POST', `/classes/${classId}/students`, b),
   importStudents: (classId, students) =>
     request('POST', `/classes/${classId}/students/import`, { students }),
   updateStudent: (id, b) => request('PATCH', `/students/${id}`, b),
   deleteStudent: (id) => request('DELETE', `/students/${id}`),
 
-  listExams: (classId) => request('GET', `/classes/${classId}/exams`),
+  listExams: (classId) => cachedGet(`/classes/${classId}/exams`),
   addExam: (classId, b) => request('POST', `/classes/${classId}/exams`, b),
-  getExam: (examId) => request('GET', `/exams/${examId}`),
+  getExam: (examId) => cachedGet(`/exams/${examId}`),
   updateExam: (examId, b) => request('PATCH', `/exams/${examId}`, b),
 
-  listResults: (examId) => request('GET', `/exams/${examId}/results`),
+  listResults: (examId) => cachedGet(`/exams/${examId}/results`),
   addResult: (examId, b) => request('POST', `/exams/${examId}/results`, b),
   deleteResult: (id) => request('DELETE', `/results/${id}`),
 };

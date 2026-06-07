@@ -4,9 +4,11 @@ import { BrowserRouter, HashRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { AuthProvider } from './auth/AuthContext.jsx';
 import { registerSW } from './pwa/install.js';
+import { startSync } from './sync/sync.js';
 import './index.css';
 
 registerSW();
+startSync();
 
 // VITE_ROUTER=hash үед HashRouter ашиглана (GitHub Pages-ийн SPA deep-link
 // 404 алдаанаас сэргийлнэ). Netlify/Vercel дээр default BrowserRouter — цэвэр URL.
