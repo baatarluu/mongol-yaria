@@ -149,12 +149,27 @@ npm run dev              # терминал 2: Vite (/api-г 4000 руу про�
 
 ## ☁️ Deploy
 
-### Netlify
+| Платформ | Backend (Google Sheets) | Тайлбар |
+|---|---|---|
+| **Netlify / Vercel** | ✅ Бүрэн | Serverless функц ажиллана. **Бодит** ашиглалтад зориулсан. |
+| **GitHub Pages** | ❌ (demo only) | Статик зөвхөн. localStorage demo горимоор ажиллана. Туршихад тохиромжтой. |
+
+### GitHub Pages (автомат — demo)
+Репог `main` салбар руу push хийхэд [`.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml)
+автоматаар classroom-ийг build хийж байршуулна:
+- Үндсэн Монгол.яриа апп: `https://<хэрэглэгч>.github.io/<repo>/`
+- **Багшийн самбар:** `https://<хэрэглэгч>.github.io/<repo>/classroom/`
+
+> GitHub Pages дээр serverless ажиллахгүй тул workflow нь `VITE_USE_API=false` (demo горим)
+> ба `VITE_ROUTER=hash` (deep-link 404-аас сэргийлэх)-ээр build хийдэг. **Бодит** Google Sheets
+> backend хэрэгтэй бол доорх Netlify/Vercel-ийг ашиглана уу.
+
+### Netlify (бүрэн — backend-тэй)
 1. [netlify.com](https://netlify.com) → repo импорт.
 2. **Base directory:** `classroom` (netlify.toml бусдыг автоматаар тохируулна).
 3. **Site settings → Environment variables**-д дээрх env-үүдийг нэм → дахин deploy.
 
-### Vercel
+### Vercel (бүрэн — backend-тэй)
 1. [vercel.com](https://vercel.com) → repo импорт → **Root Directory: `classroom`**.
 2. **Settings → Environment Variables**-д env-үүдийг нэм → deploy.
 
