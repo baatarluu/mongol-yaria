@@ -1,8 +1,8 @@
 # classroom апп-ыг Netlify дээр deploy хийх тохиргоо.
-# Энэ хавтсыг (classroom/) Netlify дээр base directory болгож сонгоно.
+# Netlify дээр import хийхдээ "Base directory" = classroom гэж заана.
+# Энэ файл (classroom/netlify.toml)-ын замууд тэр base-д харьцангуй.
 
 [build]
-  base = "classroom/"
   command = "npm install && npm run build"
   publish = "dist"
   functions = "netlify/functions"
