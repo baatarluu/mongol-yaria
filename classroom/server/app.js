@@ -99,6 +99,25 @@ export async function handleRequest({ method, path, query = {}, body = {}, heade
     if (method === 'DELETE') return deleteStudent(auth, id);
   }
 
+  if (seg[0] === 'exams') {
+    // /exams/:id
+    if (seg.length === 2) {
+      const id = seg[1];
+      if (method === 'GET') return getExam(auth, id);
+      if (method === 'PATCH') return updateExam(auth, id, body);
+    }
+    // /exams/:id/results
+    if (seg.length === 3 && seg[2] === 'results') {
+      const examId = seg[1];
+      if (method === 'GET') return listResults(auth, examId);
+      if (method === 'POST') return addResult(auth, examId, body);
+    }
+  }
+
+  if (seg[0] === 'results' && seg.length === 2) {
+    if (method === 'DELETE') return deleteResult(auth, seg[1]);
+  }
+
   return bad('Олдсонгүй: ' + method + ' /' + seg.join('/'), 404);
 }
 
@@ -325,23 +344,41 @@ async function deleteStudent(auth, id) {
 
 // ─────────────── Exams ───────────────
 
+function cleanExam(e) {
+  let answerKey = [];
+  try {
+    answerKey = e.answerKey ? JSON.parse(e.answerKey) : [];
+  } catch {
+    answerKey = [];
+  }
+  return {
+    id: e.id,
+    classId: e.classId,
+    name: e.name,
+    date: e.date,
+    totalQuestions: Number(e.totalQuestions) || 0,
+    choices: Number(e.choices) || 4,
+    idDigits: e.idDigits === '' || e.idDigits === undefined ? 5 : Number(e.idDigits),
+    answerKey,
+    createdAt: e.createdAt,
+  };
+}
+
 async function listExams(auth, classId) {
   const classes = await readTable('Classes');
   const c = classes.find((x) => x.id === classId && x.teacherId === auth.id);
   if (!c) return bad('Анги олдсонгүй', 404);
   const exams = await readTable('Exams');
-  const list = exams
-    .filter((e) => e.classId === classId)
-    .map((e) => ({
-      id: e.id,
-      classId: e.classId,
-      name: e.name,
-      date: e.date,
-      totalQuestions: Number(e.totalQuestions) || 0,
-      createdAt: e.createdAt,
-    }));
+  const list = exams.filter((e) => e.classId === classId).map(cleanExam);
   list.sort((a, b) => (a.date < b.date ? 1 : -1));
   return ok({ exams: list });
+}
+
+async function getExam(auth, examId) {
+  const exams = await readTable('Exams');
+  const e = exams.find((x) => x.id === examId && x.teacherId === auth.id);
+  if (!e) return bad('Шалгалт олдсонгүй', 404);
+  return ok({ exam: cleanExam(e) });
 }
 
 async function addExam(auth, classId, body) {
@@ -355,10 +392,103 @@ async function addExam(auth, classId, body) {
     name: String(body.name || '').trim() || 'Шалгалт',
     date: String(body.date || new Date().toISOString().slice(0, 10)),
     totalQuestions: String(body.totalQuestions || 0),
+    choices: String(body.choices || 4),
+    idDigits: body.idDigits !== undefined ? String(body.idDigits) : '5',
+    answerKey: JSON.stringify(Array.isArray(body.answerKey) ? body.answerKey : []),
     createdAt: new Date().toISOString(),
   };
   await appendRow('Exams', exam);
-  return ok({ exam });
+  return ok({ exam: cleanExam(exam) });
+}
+
+async function updateExam(auth, examId, body) {
+  const exams = await readTable('Exams');
+  const e = exams.find((x) => x.id === examId && x.teacherId === auth.id);
+  if (!e) return bad('Шалгалт олдсонгүй', 404);
+  const updated = {
+    id: e.id,
+    classId: e.classId,
+    teacherId: e.teacherId,
+    name: body.name !== undefined ? String(body.name).trim() : e.name,
+    date: body.date !== undefined ? String(body.date) : e.date,
+    totalQuestions: body.totalQuestions !== undefined ? String(body.totalQuestions) : e.totalQuestions,
+    choices: body.choices !== undefined ? String(body.choices) : e.choices,
+    idDigits: body.idDigits !== undefined ? String(body.idDigits) : e.idDigits,
+    answerKey:
+      body.answerKey !== undefined ? JSON.stringify(body.answerKey) : e.answerKey,
+    createdAt: e.createdAt,
+  };
+  await updateRow('Exams', e._row, updated);
+  return ok({ exam: cleanExam(updated) });
+}
+
+// ─────────────── Results (дүн) ───────────────
+
+function cleanResult(r) {
+  let answers = [];
+  try {
+    answers = r.answers ? JSON.parse(r.answers) : [];
+  } catch {
+    answers = [];
+  }
+  return {
+    id: r.id,
+    examId: r.examId,
+    studentId: r.studentId,
+    studentNumber: r.studentNumber,
+    studentName: r.studentName,
+    score: Number(r.score) || 0,
+    total: Number(r.total) || 0,
+    answers,
+    scannedAt: r.scannedAt,
+  };
+}
+
+async function listResults(auth, examId) {
+  const results = await readTable('Results');
+  const list = results
+    .filter((r) => r.examId === examId && r.teacherId === auth.id)
+    .map(cleanResult);
+  list.sort((a, b) => (a.scannedAt < b.scannedAt ? 1 : -1));
+  return ok({ results: list });
+}
+
+async function addResult(auth, examId, body) {
+  const exams = await readTable('Exams');
+  const e = exams.find((x) => x.id === examId && x.teacherId === auth.id);
+  if (!e) return bad('Шалгалт олдсонгүй', 404);
+  const results = await readTable('Results');
+  const num = String(body.studentNumber || '').trim();
+  // Нэг сурагчийн өмнөх дүнг устгана (давхардуулахгүй).
+  if (num) {
+    const dupRows = results
+      .filter((r) => r.examId === examId && r.studentNumber === num)
+      .map((r) => r._row);
+    await deleteRows('Results', dupRows);
+  }
+  const result = {
+    id: randomUUID(),
+    examId,
+    classId: e.classId,
+    teacherId: auth.id,
+    studentId: String(body.studentId || ''),
+    studentNumber: num,
+    studentName: String(body.studentName || '').trim(),
+    score: String(body.score || 0),
+    total: String(body.total || 0),
+    answers: JSON.stringify(Array.isArray(body.answers) ? body.answers : []),
+    scannedAt: new Date().toISOString(),
+  };
+  await appendRow('Results', result);
+  return ok({ result: cleanResult(result) });
+}
+
+async function deleteResult(auth, id) {
+  const results = await readTable('Results');
+  const r = results.find((x) => x.id === id && x.teacherId === auth.id);
+  if (!r) return bad('Дүн олдсонгүй', 404);
+  await deleteRows('Results', [r._row]);
+  return ok({ deleted: true });
 }
 
 // ─────────────── Dashboard ───────────────

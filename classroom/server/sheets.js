@@ -15,7 +15,8 @@ export const SCHEMA = {
   Teachers: ['id', 'email', 'passwordHash', 'name', 'createdAt'],
   Classes: ['id', 'teacherId', 'name', 'subject', 'color', 'archived', 'createdAt'],
   Students: ['id', 'classId', 'teacherId', 'studentNumber', 'firstName', 'lastName', 'email', 'createdAt'],
-  Exams: ['id', 'classId', 'teacherId', 'name', 'date', 'totalQuestions', 'createdAt'],
+  Exams: ['id', 'classId', 'teacherId', 'name', 'date', 'totalQuestions', 'choices', 'idDigits', 'answerKey', 'createdAt'],
+  Results: ['id', 'examId', 'classId', 'teacherId', 'studentId', 'studentNumber', 'studentName', 'score', 'total', 'answers', 'scannedAt'],
 };
 
 let _sheetsClient = null;

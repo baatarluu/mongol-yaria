@@ -7,6 +7,7 @@ import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Classes from './pages/Classes.jsx';
 import ClassDetail from './pages/ClassDetail.jsx';
+import ExamDetail from './pages/ExamDetail.jsx';
 
 function Protected({ children }) {
   const { teacher, loading } = useAuth();
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/classes" element={<Classes />} />
         <Route path="/classes/:id" element={<ClassDetail />} />
+        <Route path="/classes/:id/exams/:examId" element={<ExamDetail />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -14,13 +14,13 @@ function uid() {
 
 function load() {
   try {
-    return JSON.parse(localStorage.getItem(KEY)) || empty();
+    return { ...empty(), ...(JSON.parse(localStorage.getItem(KEY)) || {}) };
   } catch {
     return empty();
   }
 }
 function empty() {
-  return { teachers: [], classes: [], students: [], exams: [] };
+  return { teachers: [], classes: [], students: [], exams: [], results: [] };
 }
 function save(db) {
   localStorage.setItem(KEY, JSON.stringify(db));
@@ -287,10 +287,84 @@ export const demoApi = {
       name: String(body.name || '').trim() || 'Шалгалт',
       date: String(body.date || new Date().toISOString().slice(0, 10)),
       totalQuestions: Number(body.totalQuestions) || 0,
+      choices: Number(body.choices) || 4,
+      idDigits: body.idDigits !== undefined ? Number(body.idDigits) : 5,
+      answerKey: Array.isArray(body.answerKey) ? body.answerKey : [],
       createdAt: new Date().toISOString(),
     };
     db.exams.push(exam);
     save(db);
     return delay({ exam });
+  },
+
+  async getExam(examId) {
+    const db = load();
+    const t = requireAuth(db);
+    const e = db.exams.find((x) => x.id === examId && x.teacherId === t.id);
+    if (!e) fail('Шалгалт олдсонгүй', 404);
+    return delay({ exam: e });
+  },
+
+  async updateExam(examId, body) {
+    const db = load();
+    const t = requireAuth(db);
+    const e = db.exams.find((x) => x.id === examId && x.teacherId === t.id);
+    if (!e) fail('Шалгалт олдсонгүй', 404);
+    if (body.name !== undefined) e.name = String(body.name).trim();
+    if (body.date !== undefined) e.date = String(body.date);
+    if (body.totalQuestions !== undefined) e.totalQuestions = Number(body.totalQuestions) || 0;
+    if (body.choices !== undefined) e.choices = Number(body.choices) || 4;
+    if (body.idDigits !== undefined) e.idDigits = Number(body.idDigits);
+    if (body.answerKey !== undefined) e.answerKey = Array.isArray(body.answerKey) ? body.answerKey : [];
+    save(db);
+    return delay({ exam: e });
+  },
+
+  async listResults(examId) {
+    const db = load();
+    const t = requireAuth(db);
+    const list = db.results
+      .filter((r) => r.examId === examId && r.teacherId === t.id)
+      .sort((a, b) => (a.scannedAt < b.scannedAt ? 1 : -1));
+    return delay({ results: list });
+  },
+
+  async addResult(examId, body) {
+    const db = load();
+    const t = requireAuth(db);
+    const e = db.exams.find((x) => x.id === examId && x.teacherId === t.id);
+    if (!e) fail('Шалгалт олдсонгүй', 404);
+    const result = {
+      id: uid(),
+      examId,
+      classId: e.classId,
+      teacherId: t.id,
+      studentId: body.studentId || '',
+      studentNumber: String(body.studentNumber || '').trim(),
+      studentName: String(body.studentName || '').trim(),
+      score: Number(body.score) || 0,
+      total: Number(body.total) || 0,
+      answers: Array.isArray(body.answers) ? body.answers : [],
+      scannedAt: new Date().toISOString(),
+    };
+    // Нэг сурагчийн өмнөх дүнг шинэчилнэ (давхардуулахгүй).
+    if (result.studentNumber) {
+      db.results = db.results.filter(
+        (r) => !(r.examId === examId && r.studentNumber === result.studentNumber)
+      );
+    }
+    db.results.push(result);
+    save(db);
+    return delay({ result });
+  },
+
+  async deleteResult(id) {
+    const db = load();
+    const t = requireAuth(db);
+    const r = db.results.find((x) => x.id === id && x.teacherId === t.id);
+    if (!r) fail('Дүн олдсонгүй', 404);
+    db.results = db.results.filter((x) => x.id !== id);
+    save(db);
+    return delay({ deleted: true });
   },
 };

@@ -377,13 +377,20 @@ function ExamsTab({ classId }) {
       ) : (
         <div className="card divide-y divide-slate-100">
           {exams.map((e) => (
-            <div key={e.id} className="flex items-center justify-between px-4 py-3">
+            <Link
+              key={e.id}
+              to={`/classes/${classId}/exams/${e.id}`}
+              className="flex items-center justify-between px-4 py-3 transition hover:bg-slate-50"
+            >
               <div>
                 <div className="font-medium text-slate-800">{e.name}</div>
                 <div className="text-xs text-slate-400">{e.date}</div>
               </div>
-              <div className="text-sm text-slate-500">{e.totalQuestions} асуулт</div>
-            </div>
+              <div className="flex items-center gap-3 text-sm text-slate-500">
+                <span>{e.totalQuestions} асуулт</span>
+                <span className="text-slate-300">›</span>
+              </div>
+            </Link>
           ))}
         </div>
       )}
@@ -402,16 +409,17 @@ function ExamsTab({ classId }) {
 }
 
 function ExamFormModal({ open, classId, onClose, onSaved }) {
-  const [form, setForm] = useState({ name: '', date: new Date().toISOString().slice(0, 10), totalQuestions: 20 });
+  const blank = { name: '', date: new Date().toISOString().slice(0, 10), totalQuestions: 20, choices: 4 };
+  const [form, setForm] = useState(blank);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
-      setForm({ name: '', date: new Date().toISOString().slice(0, 10), totalQuestions: 20 });
+      setForm(blank);
       setError('');
     }
-  }, [open]);
+  }, [open]); // eslint-disable-line
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -451,16 +459,21 @@ function ExamFormModal({ open, classId, onClose, onSaved }) {
           <label className="label">Шалгалтын нэр *</label>
           <input className="input" autoFocus required value={form.name} onChange={set('name')} placeholder="Жишээ: I улирлын шалгалт" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label className="label">Огноо</label>
             <input className="input" type="date" value={form.date} onChange={set('date')} />
           </div>
           <div>
-            <label className="label">Асуултын тоо</label>
-            <input className="input" type="number" min="1" value={form.totalQuestions} onChange={set('totalQuestions')} />
+            <label className="label">Асуулт</label>
+            <input className="input" type="number" min="1" max="100" value={form.totalQuestions} onChange={set('totalQuestions')} />
+          </div>
+          <div>
+            <label className="label">Сонголт</label>
+            <input className="input" type="number" min="2" max="6" value={form.choices} onChange={set('choices')} />
           </div>
         </div>
+        <p className="text-xs text-slate-400">Дараа нь хариултын түлхүүр оруулж, хуудас хэвлэн уншуулна.</p>
       </form>
     </Modal>
   );

@@ -67,6 +67,12 @@ const realApi = {
 
   listExams: (classId) => request('GET', `/classes/${classId}/exams`),
   addExam: (classId, b) => request('POST', `/classes/${classId}/exams`, b),
+  getExam: (examId) => request('GET', `/exams/${examId}`),
+  updateExam: (examId, b) => request('PATCH', `/exams/${examId}`, b),
+
+  listResults: (examId) => request('GET', `/exams/${examId}/results`),
+  addResult: (examId, b) => request('POST', `/exams/${examId}/results`, b),
+  deleteResult: (id) => request('DELETE', `/results/${id}`),
 };
 
 // Горимыг сонгоно.
