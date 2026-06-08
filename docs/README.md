@@ -24,6 +24,16 @@ python3 docs/build_ppt.py
 **S-Tier:** CLAUDE.md · Subagents · Custom commands
 **A-Tier:** Plan Mode · /clear & /compact · /rewind · MCP · Hooks · Skills · Web search & fetch · File/Image upload · Task scheduling & IDE
 
+## 🎯 Skill ашиглах гарын авлага (PPT)
+
+- **`mongol-yaria-skills-guide.pptx`** — энэ repo дээр үүсгэсэн 4 skill-ийг
+  **алхам алхмаар, жишээ харилцан яриатайгаар** хэрхэн ашиглахыг харуулсан 8 слайд.
+- **`build_skills_ppt.py`** — уг гарын авлагыг дахин үүсгэх скрипт:
+
+```bash
+python3 docs/build_skills_ppt.py
+```
+
 ## 🛠️ Шууд ашиглаж болох Skill-ууд
 
 Эдгээр нь `.claude/skills/` дотор байгаа тул Claude Code дотроос **`/нэр`** гэж шууд дуудна:
